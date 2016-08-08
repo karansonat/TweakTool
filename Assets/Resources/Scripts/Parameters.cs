@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class Parameters : MonoBehaviour
+public partial class TweakTool
 {
     public float FloatNum
     {
@@ -10,9 +10,8 @@ public class Parameters : MonoBehaviour
         set { TestClass.Instance.testFloat = value; }
     }
 
-
 	// Use this for initialization
-	void Start ()
+	public void InitParameters ()
 	{
 	    TweakTool.Instance.AddParameter("FloatNum", FloatNum, 5, 0, 100, OnValueChangedFloatNum);
 	}

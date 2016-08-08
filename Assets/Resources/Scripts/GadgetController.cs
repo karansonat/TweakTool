@@ -24,7 +24,7 @@ public class GadgetController : MonoBehaviour
 
     public void Init()
     {
-        _inputField.text = Data.initial.ToString();
+        _inputField.text = Data.current.ToString();
         _inputField.characterLimit = 7;
         _btnMinus.onClick.AddListener(DecrementValue);
         _btnPlus.onClick.AddListener(IncrementValue);

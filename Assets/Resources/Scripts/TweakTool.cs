@@ -3,6 +3,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.InteropServices.ComTypes;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -14,14 +17,15 @@ public class ParameterData
 {
     public bool inGame = false;
     public string name;
-    public float initial;
+    public float current;
     public float variance;
     public float min;
     public float max;
     [JsonIgnore, NonSerialized] public GameObject Gadget;
+    [JsonIgnore, NonSerialized] public GameObject Gobject;
 }
 
-public class TweakTool : MonoSingleton<TweakTool>
+public partial class TweakTool : MonoSingleton<TweakTool>
 {
     public GameObject MainPanel;
     public GameObject InGamePanel;
@@ -43,14 +47,23 @@ public class TweakTool : MonoSingleton<TweakTool>
         Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
     }
 
+    /*void LateUpdate()
+    {
+        Refresh();
+    }*/
+
 	// Use this for initialization
 	void Start ()
 	{
+        InitParameters();
+	    Refresh();
+
 	    _triggerButton = transform.FindChild("InvisibleTrigger").GetComponent<Button>();
 	    _triggerButton.onClick.AddListener(() =>
 	    {
 	        MainPanel.SetActive(true);
 	        InGamePanel.SetActive(false);
+	        Refresh();
 	    });
 
 	    MainPanel.transform.FindChild("btnExit").GetComponent<Button>().onClick.AddListener(() =>
@@ -61,7 +74,6 @@ public class TweakTool : MonoSingleton<TweakTool>
 	            InGamePanel.SetActive(true);
 	        }
 	    });
-
 	}
 	
 	// Update is called once per frame
@@ -102,7 +114,7 @@ public class TweakTool : MonoSingleton<TweakTool>
         }
     }
 
-    public void AddParameter(string name, float initial,float variance, float min, float max, UnityAction<string> cb)
+    public void AddParameter(string name, float initial, float variance, float min, float max, UnityAction<string> cb)
     {
         //Async creation for providing fast loading.
         StartCoroutine(AddParameterAsync(name, initial, variance, min, max, cb));
@@ -124,11 +136,12 @@ public class TweakTool : MonoSingleton<TweakTool>
         var data = new ParameterData
         {
             name = name,
-            initial = initial,
+            current = initial,
             variance = variance,
             min = min,
             max = max,
-            Gadget = gadgetObject
+            Gadget = gadgetObject,
+            Gobject = parameterObject
         };
 
         //Set Gadget Call function
@@ -146,21 +159,27 @@ public class TweakTool : MonoSingleton<TweakTool>
         data.Gadget.GetComponent<GadgetController>().Init();
 
         //Name
-        var parameterName = parameterObject.transform.FindChild("Name").GetComponent<Text>();
-        parameterName.text = "    " + name;
+        var parameterName = parameterObject.transform.FindChild("TitleField/Name").GetComponent<Text>();
+        parameterName.text = name;
 
         //InGame
         var InGameCheckBox =
-            parameterObject.transform.FindChild("Parameters/Include/Toggle").GetComponent<Toggle>();
+            parameterObject.transform.FindChild("TitleField/Toggle").GetComponent<Toggle>();
         InGameCheckBox.onValueChanged.AddListener((value) =>
         {
             data.inGame = value;
             RefreshInGameGadgets(data, value);
         });
 
+        //Current
+        var currentInputField =
+            parameterObject.transform.FindChild("Variables/Current/Config/InputField").GetComponent<InputField>();
+        currentInputField.text = initial.ToString();
+        currentInputField.onValueChanged.AddListener(cb);
+
         //Variance
         var varianceInputField =
-            parameterObject.transform.FindChild("Parameters/Variance/Config/InputField").GetComponent<InputField>();
+            parameterObject.transform.FindChild("Variables/Variance/Config/InputField").GetComponent<InputField>();
         varianceInputField.text = variance.ToString();
         varianceInputField.onValueChanged.AddListener((value) =>
         {
@@ -169,7 +188,7 @@ public class TweakTool : MonoSingleton<TweakTool>
 
         //Minimum
         var minInputField =
-            parameterObject.transform.FindChild("Parameters/Minimum/Config/InputField").GetComponent<InputField>();
+            parameterObject.transform.FindChild("Variables/Minimum/Config/InputField").GetComponent<InputField>();
         minInputField.text = min.ToString();
         minInputField.onValueChanged.AddListener((value) =>
         {
@@ -178,7 +197,7 @@ public class TweakTool : MonoSingleton<TweakTool>
 
         //Maximum
         var maxInputField =
-            parameterObject.transform.FindChild("Parameters/Maximum/Config/InputField").GetComponent<InputField>();
+            parameterObject.transform.FindChild("Variables/Maximum/Config/InputField").GetComponent<InputField>();
         maxInputField.text = max.ToString();
         maxInputField.onValueChanged.AddListener((value) =>
         {
@@ -194,4 +213,23 @@ public class TweakTool : MonoSingleton<TweakTool>
         data.Gadget.GetComponent<GadgetController>().Refresh();
     }
 
+    public void Refresh()
+    {
+        var fields = typeof(TweakTool).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        foreach (var property in fields)
+        {
+            if (property.DeclaringType == typeof(TweakTool))
+            {
+                foreach (var parameterData in ParameterList)
+                {
+                    if (parameterData.name == property.Name)
+                    {
+                        parameterData.current = (float)property.GetValue(this, null);
+                        parameterData.Gobject.GetComponent<Parameter>().Refresh();
+                    }
+                }
+            }
+
+        }
+    }
 }
