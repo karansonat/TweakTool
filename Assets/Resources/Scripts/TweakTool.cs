@@ -47,10 +47,10 @@ public partial class TweakTool : MonoSingleton<TweakTool>
         Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
     }
 
-    /*void LateUpdate()
+    void LateUpdate()
     {
         Refresh();
-    }*/
+    }
 
 	// Use this for initialization
 	void Start ()
@@ -230,6 +230,20 @@ public partial class TweakTool : MonoSingleton<TweakTool>
                 }
             }
 
+        }
+    }
+
+    public void InitParameters()
+    {
+        var fields = typeof(TweakTool).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        for (var index = 0; index < fields.Length; index++)
+        {
+            var property = fields[index];
+            if (property.DeclaringType == typeof(TweakTool))
+            {
+                AddParameter(property.Name, (float) property.GetValue(this, null), 1, 0, 100,
+                    (value) => { property.SetValue(this, float.Parse(value), null); });
+            }
         }
     }
 }

@@ -4,12 +4,14 @@ using System.Collections;
 public class TestClass : MonoSingleton<TestClass>
 {
 
-    public float testFloat;
+    public float test1;
+    public float test2;
+    public float test3;
 
-	// Use this for initialization
+    // Use this for initialization
 	void Start ()
 	{
-	    testFloat = 5.0f;
+
 	}
 	
 	// Update is called once per frame

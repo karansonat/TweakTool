@@ -11,14 +11,14 @@ public partial class TweakTool
     }
 
 	// Use this for initialization
-	public void InitParameters ()
+	/*public void InitParameters ()
 	{
-	    TweakTool.Instance.AddParameter("FloatNum", FloatNum, 5, 0, 100, OnValueChangedFloatNum);
-	}
+	    AddParameter("FloatNum", FloatNum, 5, 0, 100, OnValueChangedFloatNum);
+	}*/
 
-    private void OnValueChangedFloatNum(string value)
+    /*private void OnValueChangedFloatNum(string value)
     {
         FloatNum = float.Parse(value);
-    }
+    }*/
 
 }
