@@ -191,6 +191,7 @@ public class TweakTool : MonoSingleton<TweakTool>
     public void RefreshInGameGadgets(ParameterData data, bool visibility)
     {
         data.Gadget.SetActive(visibility);
+        data.Gadget.GetComponent<GadgetController>().Refresh();
     }
 
 }
