@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class GadgetController : MonoBehaviour
 {
     [HideInInspector] public ParameterData Data;
+    private Text _title;
     private InputField _inputField;
     private Button _btnMinus;
     private Button _btnPlus;
@@ -16,6 +17,7 @@ public class GadgetController : MonoBehaviour
 	// Use this for initialization
 	void Awake ()
 	{
+	    _title = transform.FindChild("Title").GetComponent<Text>();
 	    _inputField = transform.FindChild("Config/InputField").GetComponent<InputField>();
 	    _btnMinus = transform.FindChild("Config/btnMinus").GetComponent<Button>();
 	    _btnPlus = transform.FindChild("Config/btnPlus").GetComponent<Button>();
@@ -24,24 +26,28 @@ public class GadgetController : MonoBehaviour
 
     public void Init()
     {
+        _title.text = Data.name;
         _inputField.text = Data.current.ToString();
         _inputField.characterLimit = 7;
         _btnMinus.onClick.AddListener(DecrementValue);
         _btnPlus.onClick.AddListener(IncrementValue);
+        _slider.wholeNumbers = true;
         Refresh();
     }
 
     public void Refresh()
     {
         _inputField.text = Data.current.ToString();
-        _slider.minValue = Data.min;
-        _slider.maxValue = Data.max;
+        _slider.minValue = 0;
+        var max = (Data.max - Data.min) / Data.variance;
+        _slider.maxValue = max;
         _slider.onValueChanged.RemoveAllListeners();
         _slider.onValueChanged.AddListener((value) =>
         {
-            _inputField.text = value.ToString();
+            _inputField.text = (value * Data.variance + Data.min).ToString();
             _cb(value.ToString());
         });
+        _slider.Rebuild(CanvasUpdate.Layout);
     }
 
     public void IncrementValue()
@@ -49,7 +55,7 @@ public class GadgetController : MonoBehaviour
         var value = float.Parse(_inputField.text);
         value = (value + Data.variance > Data.max) ? Data.max : value + Data.variance;
         _inputField.text = value.ToString();
-        _slider.value = value;
+        _slider.value = (value - Data.min) / Data.variance;
     }
 
     public void DecrementValue()
@@ -57,7 +63,7 @@ public class GadgetController : MonoBehaviour
         var value = float.Parse(_inputField.text);
         value = (value - Data.variance < Data.min) ? Data.min : value - Data.variance;
         _inputField.text = value.ToString();
-        _slider.value = value;
+        _slider.value = (value - Data.min) / Data.variance;
     }
 
     public void SetCallBackFunc(UnityAction<string> cb)
