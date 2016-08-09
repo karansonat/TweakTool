@@ -200,7 +200,7 @@ public partial class TweakTool : MonoSingleton<TweakTool>
         varianceInputField.text = variance.ToString();
         varianceInputField.onValueChanged.AddListener((value) =>
         {
-            data.variance = float.Parse(value);
+            float.TryParse(value, out data.variance);
         });
 
         //Minimum
@@ -209,7 +209,7 @@ public partial class TweakTool : MonoSingleton<TweakTool>
         minInputField.text = min.ToString();
         minInputField.onValueChanged.AddListener((value) =>
         {
-            data.min = float.Parse(value);
+            float.TryParse(value, out data.min);
         });
 
         //Maximum
@@ -218,7 +218,7 @@ public partial class TweakTool : MonoSingleton<TweakTool>
         maxInputField.text = max.ToString();
         maxInputField.onValueChanged.AddListener((value) =>
         {
-            data.max = float.Parse(value);
+            float.TryParse(value, out data.max);
         });
 
         yield return null;
@@ -262,7 +262,12 @@ public partial class TweakTool : MonoSingleton<TweakTool>
             if (property.DeclaringType == typeof(TweakTool))
             {
                 AddParameter(property.Name, (float) property.GetValue(this, null), 1, 0, 100,
-                    (value) => { property.SetValue(this, float.Parse(value), null); });
+                    (value) =>
+                    {
+                        float result;
+                        float.TryParse(value, out result);
+                        property.SetValue(this, result, null);
+                    });
             }
         }
     }
