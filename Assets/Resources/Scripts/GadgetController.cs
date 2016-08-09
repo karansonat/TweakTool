@@ -33,6 +33,7 @@ public class GadgetController : MonoBehaviour
 
     public void Refresh()
     {
+        _inputField.text = Data.current.ToString();
         _slider.minValue = Data.min;
         _slider.maxValue = Data.max;
         _slider.onValueChanged.RemoveAllListeners();

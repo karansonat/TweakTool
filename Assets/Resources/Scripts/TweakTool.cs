@@ -36,6 +36,7 @@ public partial class TweakTool : MonoSingleton<TweakTool>
     public GameObject InGameGadgetPrefab;
     private Button _triggerButton;
     public List<ParameterData> ParameterList = new List<ParameterData>();
+    private readonly List<ParameterData> _defaultParameterList = new List<ParameterData>();
 
     public string test;
     public float testFloat = 5;
@@ -151,8 +152,9 @@ public partial class TweakTool : MonoSingleton<TweakTool>
         data.Gadget.SetActive(false);
 
         //Add parameter data to list.
-        parameterObject.GetComponent<Parameter>().SetParameter(data);
+        parameterObject.GetComponent<Parameter>().ParameterData = data;
         ParameterList.Add(data);
+        _defaultParameterList.Add(data.DeepCopy());
 
         //Initialize gadget component
         data.Gadget.GetComponent<GadgetController>().Data = data;
@@ -244,6 +246,23 @@ public partial class TweakTool : MonoSingleton<TweakTool>
                 AddParameter(property.Name, (float) property.GetValue(this, null), 1, 0, 100,
                     (value) => { property.SetValue(this, float.Parse(value), null); });
             }
+        }
+    }
+
+    public void ResetAllParameters()
+    {
+        for (var i = 0; i < ParameterList.Count; i++)
+        {
+            var parameter = ParameterList[i].Gobject.GetComponent<Parameter>();
+            var currentData = parameter.ParameterData;
+            var defaultData = _defaultParameterList[i];
+            currentData.current = defaultData.current;
+            currentData.inGame = defaultData.inGame;
+            currentData.variance = defaultData.variance;
+            currentData.min = defaultData.min;
+            currentData.max = defaultData.max;
+            parameter.Refresh();
+
         }
     }
 }
