@@ -2,18 +2,20 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using Newtonsoft.Json;
 
+[Serializable]
+public class ProfileData
+{
+    public string name;
+    public List<ParameterData> data;
+}
 
-[System.Serializable]
+[Serializable]
 public class ParameterData
 {
     public bool inGame = false;
@@ -38,11 +40,11 @@ public partial class TweakTool : MonoSingleton<TweakTool>
     private Button _triggerButton;
     private Button _liveDataButton;
     private bool _liveData = false;
+    [HideInInspector] public int CurrentSaveSlot;
     public List<ParameterData> ParameterList = new List<ParameterData>();
     private readonly List<ParameterData> _defaultParameterList = new List<ParameterData>();
 
-    public string test;
-    public float testFloat = 5;
+
 
     void Awake()
     {
@@ -61,6 +63,7 @@ public partial class TweakTool : MonoSingleton<TweakTool>
 	void Start ()
 	{
         InitParameters();
+	    RefreshProfileSlots();
 	    Refresh();
 
 	    _liveDataButton = transform.Find("MainPanel/btnLiveData").GetComponent<Button>();
@@ -81,23 +84,50 @@ public partial class TweakTool : MonoSingleton<TweakTool>
 	        }
 	    });
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
 
-    public void SaveProfile(int index)
+    public void RefreshProfileSlots()
     {
-        var data = JsonConvert.SerializeObject(ParameterList, Formatting.Indented);
-        var path = Directory.CreateDirectory(Application.persistentDataPath + "//Tweakable//Profiles");
-        File.WriteAllText(path.FullName + "//Profile" + index + ".json", data);
+        var profileHolder = TweakTool.Instance.MainPanel.transform.FindChild("ProfilePanel/Profiles").gameObject;
+
+        if (File.Exists(Application.persistentDataPath + "//Tweakable//Profiles//Profile1.json"))
+        {
+            var profile1 = profileHolder.transform.FindChild("Profile1");
+            var profile1Data = File.ReadAllText(Application.persistentDataPath + "//Tweakable//Profiles//Profile1.json");
+            profile1.FindChild("Name").GetComponent<Text>().text = JsonConvert.DeserializeObject<ProfileData>(profile1Data).name;
+        }
+
+        if (File.Exists(Application.persistentDataPath + "//Tweakable//Profiles//Profile2.json"))
+        {
+            var profile2 = profileHolder.transform.FindChild("Profile2");
+            var profile2Data = File.ReadAllText(Application.persistentDataPath + "//Tweakable//Profiles//Profile2.json");
+            profile2.FindChild("Name").GetComponent<Text>().text = JsonConvert.DeserializeObject<ProfileData>(profile2Data).name;
+        }
+
+        if (File.Exists(Application.persistentDataPath + "//Tweakable//Profiles//Profile3.json"))
+        {
+            var profile3 = profileHolder.transform.FindChild("Profile3");
+            var profile3Data = File.ReadAllText(Application.persistentDataPath + "//Tweakable//Profiles//Profile3.json");
+            profile3.FindChild("Name").GetComponent<Text>().text = JsonConvert.DeserializeObject<ProfileData>(profile3Data).name;
+        }
     }
 
-    public void LoadProfile(int index)
+    public void SaveProfile(string name)
     {
-        var profileData = File.ReadAllText(Application.persistentDataPath + "//Tweakable//Profiles//Profile" + index + ".json");
-        var parameters = JsonConvert.DeserializeObject<List<ParameterData>>(profileData);
+        var serializeObject = new ProfileData
+        {
+            name = name,
+            data = ParameterList
+        };
+        var data = JsonConvert.SerializeObject(serializeObject, Formatting.Indented);
+        var path = Directory.CreateDirectory(Application.persistentDataPath + "//Tweakable//Profiles");
+        File.WriteAllText(path.FullName + "//Profile" + CurrentSaveSlot + ".json", data);
+    }
+
+    public void LoadProfile()
+    {
+        var data = File.ReadAllText(Application.persistentDataPath + "//Tweakable//Profiles//Profile" + CurrentSaveSlot + ".json");
+        var profileData = JsonConvert.DeserializeObject<ProfileData>(data);
+        var parameters = profileData.data;
         var childIndex = 0;
         foreach (var parameter in parameters)
         {
@@ -193,6 +223,10 @@ public partial class TweakTool : MonoSingleton<TweakTool>
             parameterObject.transform.FindChild("Variables/Current/Config/InputField").GetComponent<InputField>();
         currentInputField.text = initial.ToString();
         currentInputField.onValueChanged.AddListener(cb);
+        currentInputField.onValueChanged.AddListener((value) =>
+        {
+            float.TryParse(value, out data.current);
+        });
 
         //Variance
         var varianceInputField =
@@ -238,18 +272,13 @@ public partial class TweakTool : MonoSingleton<TweakTool>
         var fields = typeof(TweakTool).GetProperties(BindingFlags.Public | BindingFlags.Instance);
         foreach (var property in fields)
         {
-            if (property.DeclaringType == typeof(TweakTool))
+            if (property.DeclaringType != typeof(TweakTool)) continue;
+            foreach (var parameterData in ParameterList)
             {
-                foreach (var parameterData in ParameterList)
-                {
-                    if (parameterData.name == property.Name)
-                    {
-                        parameterData.current = (float)property.GetValue(this, null);
-                        parameterData.Container.GetComponent<Parameter>().Refresh();
-                    }
-                }
+                if (parameterData.name != property.Name) continue;
+                parameterData.current = (float)property.GetValue(this, null);
+                parameterData.Container.GetComponent<Parameter>().Refresh();
             }
-
         }
     }
 
@@ -311,5 +340,10 @@ public partial class TweakTool : MonoSingleton<TweakTool>
         redColorBlock.pressedColor = colorRed;
 
         _liveDataButton.colors = _liveData ? greenColorBlock : redColorBlock;
+    }
+
+    public void SetCurrentSaveSlot(int index)
+    {
+        CurrentSaveSlot = index;
     }
 }
