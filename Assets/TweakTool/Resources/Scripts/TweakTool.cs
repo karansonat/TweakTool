@@ -30,18 +30,16 @@ public class ParameterData
 
 public partial class TweakTool : MonoSingleton<TweakTool>
 {
-    public GameObject MainPanel;
-    public GameObject InGamePanel;
-
-    public GameObject ParameterHolder;
-    public GameObject InGameGadgetHolder;
-    public GameObject ParameterPrefab;
-    public GameObject InGameGadgetPrefab;
+    [HideInInspector] public GameObject MainPanel;
+    [HideInInspector] public GameObject InGamePanel;
+    [HideInInspector] public GameObject ParameterHolder;
+    [HideInInspector] public GameObject ParameterPrefab;
+    [HideInInspector] public GameObject InGameGadgetPrefab;
     private Button _triggerButton;
     private Button _liveDataButton;
     private bool _liveData = false;
     [HideInInspector] public int CurrentSaveSlot;
-    public List<ParameterData> ParameterList = new List<ParameterData>();
+    [HideInInspector] public List<ParameterData> ParameterList = new List<ParameterData>();
     private readonly List<ParameterData> _defaultParameterList = new List<ParameterData>();
 
 
@@ -51,6 +49,17 @@ public partial class TweakTool : MonoSingleton<TweakTool>
         // BinaryFormatter used in ExtensionMethods.DeepCopy requires jit compiler.
         // Forces a different code path in the BinaryFormatter that doesn't rely on run-time code generation (which would break on iOS).
         Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
+
+        if (GameObject.Find("EventSystem"))
+        {
+            Debug.LogWarning("TweakTool can not work without EventSystem. Add EventSystem to your scene.");
+        }
+
+        MainPanel = transform.FindChild("MainPanel").gameObject;
+        InGamePanel = transform.FindChild("InGamePanel").gameObject;
+        ParameterHolder = transform.FindChild("MainPanel/Parameters Scroll View/Viewport/ParametersPanel").gameObject;
+        ParameterPrefab = Resources.Load("Prefabs/Parameter") as GameObject;
+        InGameGadgetPrefab = Resources.Load("Prefabs/InGameGadget") as GameObject;
     }
 
     void LateUpdate()
@@ -176,7 +185,7 @@ public partial class TweakTool : MonoSingleton<TweakTool>
 
         //Set hiearchy
         parameterObject.transform.SetParent(ParameterHolder.transform, false);
-        gadgetObject.transform.SetParent(InGameGadgetHolder.transform, false);
+        gadgetObject.transform.SetParent(InGamePanel.transform, false);
 
         //Create and set parameter data
         var data = new ParameterData

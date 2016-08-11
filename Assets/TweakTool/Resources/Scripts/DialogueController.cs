@@ -4,14 +4,21 @@ using UnityEngine.UI;
 
 public class DialogueController : MonoBehaviour
 {
-    public GameObject SaveDialogue;
-    public GameObject LoadDialogue;
-    public GameObject ResetDialogue;
+    [HideInInspector] public GameObject SaveDialogue;
+    [HideInInspector] public GameObject LoadDialogue;
+    [HideInInspector] public GameObject ResetDialogue;
 
     private GameObject _profileHolder;
     private GameObject _profile1;
     private GameObject _profile2;
     private GameObject _profile3;
+
+    void Awake()
+    {
+        SaveDialogue = transform.FindChild("SavePanel").gameObject;
+        LoadDialogue = transform.FindChild("LoadPanel").gameObject;
+        ResetDialogue = transform.FindChild("ResetPanel").gameObject;
+    }
 
 	// Use this for initialization
 	void Start ()
