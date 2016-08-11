@@ -28,8 +28,9 @@ public class ParameterData
     [JsonIgnore, NonSerialized] public GameObject Container;
 }
 
-public partial class TweakTool : MonoSingleton<TweakTool>
+public partial class TweakTool : MonoBehaviour
 {
+    public static TweakTool Instance;
     [HideInInspector] public GameObject MainPanel;
     [HideInInspector] public GameObject InGamePanel;
     [HideInInspector] public GameObject ParameterHolder;
@@ -42,24 +43,28 @@ public partial class TweakTool : MonoSingleton<TweakTool>
     [HideInInspector] public List<ParameterData> ParameterList = new List<ParameterData>();
     private readonly List<ParameterData> _defaultParameterList = new List<ParameterData>();
 
-
-
     void Awake()
     {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+        }
+
         // BinaryFormatter used in ExtensionMethods.DeepCopy requires jit compiler.
         // Forces a different code path in the BinaryFormatter that doesn't rely on run-time code generation (which would break on iOS).
         Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
-
-        if (GameObject.Find("EventSystem"))
-        {
-            Debug.LogWarning("TweakTool can not work without EventSystem. Add EventSystem to your scene.");
-        }
 
         MainPanel = transform.FindChild("MainPanel").gameObject;
         InGamePanel = transform.FindChild("InGamePanel").gameObject;
         ParameterHolder = transform.FindChild("MainPanel/Parameters Scroll View/Viewport/ParametersPanel").gameObject;
         ParameterPrefab = Resources.Load("Prefabs/Parameter") as GameObject;
         InGameGadgetPrefab = Resources.Load("Prefabs/InGameGadget") as GameObject;
+
+        DontDestroyOnLoad(gameObject);
     }
 
     void LateUpdate()

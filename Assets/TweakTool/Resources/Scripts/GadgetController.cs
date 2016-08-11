@@ -29,6 +29,14 @@ public class GadgetController : MonoBehaviour
         _title.text = Data.name;
         _inputField.text = Data.current.ToString();
         _inputField.characterLimit = 7;
+        _inputField.onEndEdit.AddListener((value) =>
+        {
+            float currentValue;
+            float.TryParse(value, out currentValue);
+            if (currentValue > Data.max) currentValue = Data.max;
+            if (currentValue < Data.min) currentValue = Data.min;
+            _inputField.text = currentValue.ToString();
+        });
         _btnMinus.onClick.AddListener(DecrementValue);
         _btnPlus.onClick.AddListener(IncrementValue);
         _slider.wholeNumbers = true;
