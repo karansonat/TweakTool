@@ -53,8 +53,8 @@ public class GadgetController : MonoBehaviour
         _slider.onValueChanged.AddListener((value) =>
         {
             _inputField.text = (value * Data.variance + Data.min).ToString();
-            _cb(value.ToString());
         });
+        _slider.value = (Data.current - Data.min) / Data.variance;
         _slider.Rebuild(CanvasUpdate.Layout);
     }
 

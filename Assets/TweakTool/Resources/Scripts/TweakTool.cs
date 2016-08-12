@@ -96,6 +96,10 @@ public partial class TweakTool : MonoBehaviour
 	        {
 	            InGamePanel.SetActive(true);
 	        }
+	        foreach (var parameterData in ParameterList)
+	        {
+	            parameterData.Gadget.GetComponent<GadgetController>().Refresh();
+	        }
 	    });
 	}
 
@@ -304,7 +308,8 @@ public partial class TweakTool : MonoBehaviour
             var property = fields[index];
             if (property.DeclaringType == typeof(TweakTool))
             {
-                AddParameter(property.Name, (float) property.GetValue(this, null), 1, 0, 100,
+                var parameterValue = (float) property.GetValue(this, null);
+                AddParameter(property.Name, parameterValue, 1, 0, parameterValue * 5,
                     (value) =>
                     {
                         float result;
