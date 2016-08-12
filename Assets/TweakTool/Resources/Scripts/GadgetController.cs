@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using Newtonsoft.Json.Serialization;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -61,7 +62,18 @@ public class GadgetController : MonoBehaviour
     public void IncrementValue()
     {
         var value = float.Parse(_inputField.text);
-        value = (value + Data.variance > Data.max) ? Data.max : value + Data.variance;
+        if (value + Data.variance > Data.max)
+        {
+            value = Data.max;
+        }
+        else if (value + Data.variance < Data.min)
+        {
+            value = Data.min;
+        }
+        else
+        {
+            value = value + Data.variance;
+        }
         _inputField.text = value.ToString();
         _slider.value = (value - Data.min) / Data.variance;
     }
@@ -69,7 +81,18 @@ public class GadgetController : MonoBehaviour
     public void DecrementValue()
     {
         var value = float.Parse(_inputField.text);
-        value = (value - Data.variance < Data.min) ? Data.min : value - Data.variance;
+        if (value - Data.variance > Data.max)
+        {
+            value = Data.max;
+        }
+        else if (value - Data.variance < Data.min)
+        {
+            value = Data.min;
+        }
+        else
+        {
+            value = value - Data.variance;
+        }
         _inputField.text = value.ToString();
         _slider.value = (value - Data.min) / Data.variance;
     }
