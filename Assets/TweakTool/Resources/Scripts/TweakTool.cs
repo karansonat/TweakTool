@@ -309,7 +309,7 @@ public partial class TweakTool : MonoBehaviour
             if (property.DeclaringType == typeof(TweakTool))
             {
                 var parameterValue = (float) property.GetValue(this, null);
-                AddParameter(property.Name, parameterValue, 1, 0, parameterValue * 5,
+                AddParameter(property.Name, parameterValue, 0.001f, 0, parameterValue * 5,
                     (value) =>
                     {
                         float result;
